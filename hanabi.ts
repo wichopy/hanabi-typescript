@@ -107,7 +107,9 @@ class Player {
   }
 
   discardCard(cardId: number) {
-    this.hand = this.hand.filter(card => card !== cardId)
+    if (this.hand) {
+      this.hand = this.hand.filter(card => card.id !== cardId)
+    }
   }
 
   serialize() {
