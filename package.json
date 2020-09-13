@@ -4,16 +4,30 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
+    "test:watch": "jest --watchAll",
     "tsc": "tsc",
     "dev-compile": "ts-node ./hanabi.ts",
     "dev": "ts-node-dev --respawn ./hanabi.ts",
-    "prod": "tsc && node ./build/hanabi.js"
+    "prod": "tsc && node ./build/hanabi.js",
+    "serve": "ts-node-dev --respawn ./server.ts"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/express": "^4.17.8",
+    "express": "^4.17.1",
     "ts-node-dev": "^1.0.0-pre.62",
     "typescript": "^4.0.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.13",
+    "@types/node": "^14.10.1",
+    "@types/source-map-support": "^0.5.3",
+    "jest": "^26.4.2",
+    "onchange": "^7.0.2",
+    "serve": "^11.3.2",
+    "source-map-support": "^0.5.19",
+    "ts-jest": "^26.3.0"
   }
 }
