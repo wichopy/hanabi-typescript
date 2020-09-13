@@ -173,7 +173,10 @@ export class Hanabi {
    * 
    * @param playerId id of the player viewing the game.
    */
-  serialize(playerId: number) {
+  serialize(playerId?: number) {
+    if (playerId === undefined) {
+      return this.players.map(player => player.serialize())
+    }
     return this.players.filter(player => player.id !== playerId).map(player => player.serialize())
   }
 }
