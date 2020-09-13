@@ -1,0 +1,19 @@
+{
+  "name": "hanabi",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "tsc": "tsc",
+    "dev-compile": "ts-node ./hanabi.ts",
+    "dev": "ts-node-dev --respawn ./hanabi.ts",
+    "prod": "tsc && node ./build/hanabi.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ts-node-dev": "^1.0.0-pre.62",
+    "typescript": "^4.0.2"
+  }
+}
