@@ -1,4 +1,4 @@
-enum CardColor {
+export enum CardColor {
   red = 'red',
   yellow = 'yellow',
   green = 'green',
@@ -6,7 +6,12 @@ enum CardColor {
   white = 'white',
 }
 
-class Card {
+export enum GameStatus {
+  playing = 'playing',
+  over = 'over',
+}
+
+export class Card {
   id: number;
   value: number;
   color: CardColor;
@@ -108,7 +113,17 @@ class Player {
 
   discardCard(cardId: number) {
     if (this.hand) {
-      this.hand = this.hand.filter(card => card.id !== cardId)
+      const index = this.hand.findIndex(card => card.id === cardId)
+      const card = this.hand.splice(index, 1)
+      return card
+    }
+  }
+
+  playCard(cardId: number): Card {
+    if (this.hand) {
+      const index = this.hand.findIndex(card => card.id === cardId)
+      const cards = this.hand.splice(index, 1)
+      return cards[0]
     }
   }
 
@@ -121,15 +136,102 @@ class Player {
   }
 }
 
+export class PlaySpace {
+  red: Card[];
+  blue: Card[];
+  yellow: Card[];
+  green: Card[];
+
+  constructor() {
+    this.red = []
+    this.blue = []
+    this.yellow = []
+    this.green = []
+  }
+
+  receivePlayCard(card: Card): boolean {
+    if (card.color === CardColor.white) {
+      let piles = [this.red, this.blue, this.yellow, this.green]
+      if (card.value === 1) {
+        for (let pile of piles) {
+          if (pile.length === 0) {
+            pile.push(card)
+            return true
+          }
+        }
+
+        return false
+      }
+
+      for (let pile of piles) {
+        if (pile.length === card.value - 1) {
+          pile.push(card)
+          return true
+        }
+      }
+
+      return false
+    }
+
+    if (card.color === CardColor.red) {
+      if (this.red.length === 0)
+      if (card.value !== 1) {
+        return false
+      } else {
+        this.red.push(card)
+        return true
+      }
+    }
+
+
+    if (card.color === CardColor.green) {
+      if (this.green.length === 0)
+      if (card.value !== 1) {
+        return false
+      } else {
+        this.green.push(card)
+        return true
+      }
+    }
+
+
+    if (card.color === CardColor.blue) {
+      if (this.blue.length === 0)
+      if (card.value !== 1) {
+        return false
+      } else {
+        this.blue.push(card)
+        return true
+      }
+    }
+
+
+    if (card.color === CardColor.yellow) {
+      if (this.yellow.length === 0)
+      if (card.value !== 1) {
+        return false
+      } else {
+        this.yellow.push(card)
+        return true
+      }
+    }
+
+    return false
+  }
+}
+
 export class Hanabi {
   deck: Deck;
   numPlayers: number;
   players: Player[];
   blueTokens = 8;
   redTokens = 3;
+  playSpace: PlaySpace;
+  status = GameStatus.playing;
 
   constructor(numPlayers: number) {
     this.deck = new Deck();
+    this.playSpace = new PlaySpace();
     this.numPlayers = numPlayers;
     this.players = Array(this.numPlayers)
     for (let i = 0; i < this.numPlayers; i++) {
@@ -156,6 +258,10 @@ export class Hanabi {
   }
 
   giveHint(playerId: number, hint: Hint) {
+    if (this.status === GameStatus.over) {
+      throw new Error('Game is ended, cannot make anymore plays')
+    }
+    
     if (this.blueTokens === 0) {
       throw new Error('No blue tokens left, must discard a card to get more.')
     }
@@ -164,9 +270,34 @@ export class Hanabi {
   }
 
   discardCard(playerId: number, cardId: number) {
+    if (this.status === GameStatus.over) {
+      throw new Error('Game is ended, cannot make anymore plays')
+    }
+
     this.players[playerId].discardCard(cardId)
     this.blueTokens += 1
     this.players[playerId].hand?.push(this.deck.drawCard())
+  }
+
+  playCard(playerId: number, cardId: number) {
+    if (this.status === GameStatus.over) {
+      throw new Error('Game is ended, cannot make anymore plays')
+    }
+
+    const card = this.players[playerId].playCard(cardId)
+    const success = this.playSpace.receivePlayCard(card)
+
+    if (!success) {
+      this.activateRedToken()
+    }
+  }
+
+  activateRedToken() {
+    this.redTokens -= 1
+
+    if (this.redTokens === 0) {
+      this.status = GameStatus.over
+    }
   }
 
   /**

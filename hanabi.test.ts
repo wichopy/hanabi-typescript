@@ -1,5 +1,4 @@
-import {Hanabi} from './hanabi'
-
+import {Hanabi, PlaySpace, Card, CardColor } from './hanabi'
 describe('Hanabi', () => {
   const numPlayers = 4
   let hanabi = new Hanabi(numPlayers)
@@ -53,9 +52,14 @@ describe('Hanabi', () => {
     })
 
     describe('playing cards', () => {
-      it.todo('if valid, include cards in the valid cards pile.')
+      it('if invalid, activate a red token.', () => {
+        const receivePlayCardMock = jest.fn(() => false)
+        hanabi.playSpace.receivePlayCard = receivePlayCardMock
+        hanabi.playCard(0, 0)
 
-      it.todo('if invalid, activate a red token.')
+        expect(hanabi.redTokens).toEqual(2)
+        expect(receivePlayCardMock).toBeCalledTimes(1)
+      })
     })
   })
 
@@ -67,4 +71,28 @@ describe('Hanabi', () => {
     it.todo('game ends if all colors are fulling populated')
   })
 
+})
+
+describe('Play Space', () => {
+  let playSpace = new PlaySpace()
+  beforeEach(() => {
+    playSpace = new PlaySpace()
+  })
+
+  it('should return true on valid plays', () => {
+    expect(playSpace.receivePlayCard(new Card(0, 1, CardColor.red))).toEqual(true)
+  })
+
+  it('should include card in piles on valid plays', () => {
+    expect(playSpace.receivePlayCard(new Card(0, 1, CardColor.red))).toEqual(true)
+    expect(playSpace.red.length).toEqual(1)
+  })
+
+  it('should return false on invalid plays', () => {
+    expect(playSpace.receivePlayCard(new Card(0, 3, CardColor.red))).toEqual(false)
+  })
+
+  it.todo('should handle white cards by auto placing them in the appropriate pile')
+
+  it.todo('should allow a user to specify which coloumn they want to place a white card if there is more than 1 possibility.')
 })
