@@ -1,6 +1,6 @@
 import {Hanabi, PlaySpace, Card, CardColor } from './hanabi'
 describe('Hanabi', () => {
-  const numPlayers = 4
+  let numPlayers = 3
   let hanabi = new Hanabi(numPlayers)
   beforeEach(() => {
     hanabi = new Hanabi(numPlayers)
@@ -8,10 +8,24 @@ describe('Hanabi', () => {
 
   describe('intialize', () => {
     it('should initialize with specified number of players', () => {
-      expect(hanabi.numPlayers).toEqual(4)
+      expect(hanabi.numPlayers).toEqual(3)
     })
   
-    it('should initialize with a 50 carddeck and deal 5 x num players', () => {
+    describe('when 4 or more players', () => {
+      let numPlayers = 5
+      let hanabi = new Hanabi(numPlayers)
+      beforeEach(() => {
+        hanabi = new Hanabi(numPlayers)
+      })
+      it('should initialize with a 50 carddeck and deal 4 cards per player ', () => {
+        expect(hanabi.deck.length).toEqual(50 - 4 * numPlayers)
+        for (let i = 0; i < numPlayers; i++) {
+          expect(hanabi.players[i].hand.length).toEqual(4)
+        }
+      })
+    })
+
+    it('should initialize with a 50 carddeck and deal 5 cards per player when less than 4 players', () => {
       expect(hanabi.deck.length).toEqual(50 - 5 * numPlayers)
       for (let i = 0; i < numPlayers; i++) {
         expect(hanabi.players[i].hand.length).toEqual(5)
@@ -49,6 +63,11 @@ describe('Hanabi', () => {
       it.todo('should replace a card in player hand and increase blue tokens')
 
       it.todo('should not be pissible if the deck is empty')
+
+      it('should not be possible if no cards are in the hand', () =>  {
+        hanabi.players[0].hand = []
+        expect(hanabi.discardCard(0, 0)).toEqual(false)
+      })
     })
 
     describe('playing cards', () => {
@@ -68,13 +87,14 @@ describe('Hanabi', () => {
 
     it.todo('game ends if all cards are played')
 
-    it.todo('game ends if all colors are fulling populated')
+    it.todo('game ends if all color piles are fully populated')
   })
 
 })
 
 describe('Play Space', () => {
   let playSpace = new PlaySpace()
+
   beforeEach(() => {
     playSpace = new PlaySpace()
   })
@@ -95,4 +115,22 @@ describe('Play Space', () => {
   it.todo('should handle white cards by auto placing them in the appropriate pile')
 
   it.todo('should allow a user to specify which coloumn they want to place a white card if there is more than 1 possibility.')
+
+  it('should determine if all the color piles are not fully populated', () => {
+    playSpace.blue = Array(4)
+    playSpace.red = Array(5)
+    playSpace.green = Array(5)
+    playSpace.yellow = Array(5)
+
+    expect(playSpace.complete()).toBeFalsy()
+  })
+
+  it('should determine if all the color piles are populated', () => {
+    playSpace.blue = Array(5)
+    playSpace.red = Array(5)
+    playSpace.green = Array(5)
+    playSpace.yellow = Array(5)
+
+    expect(playSpace.complete()).toBeTruthy()
+  })
 })

@@ -9,6 +9,7 @@ export enum CardColor {
 export enum GameStatus {
   playing = 'playing',
   over = 'over',
+  win = 'win',
 }
 
 export class Card {
@@ -94,12 +95,13 @@ class Deck {
 
 class Player {
   id: number;
-  hand?: Card[];
+  hand: Card[];
   hints: Hint[];
 
   constructor(id: number){
     this.id = id
     this.hints = []
+    this.hand = []
   }
 
   getInitialHand(cards: Card[]) {
@@ -111,20 +113,20 @@ class Player {
     console.log(this.hints)
   }
 
-  discardCard(cardId: number) {
-    if (this.hand) {
+  discardCard(cardId: number): Card | null {
+    if (this.hand.length > 0) {
       const index = this.hand.findIndex(card => card.id === cardId)
       const card = this.hand.splice(index, 1)
-      return card
+      return card[0]
     }
+
+    return null
   }
 
   playCard(cardId: number): Card {
-    if (this.hand) {
-      const index = this.hand.findIndex(card => card.id === cardId)
-      const cards = this.hand.splice(index, 1)
-      return cards[0]
-    }
+    const index = this.hand.findIndex(card => card.id === cardId)
+    const cards = this.hand.splice(index, 1)
+    return cards[0]
   }
 
   serialize() {
@@ -147,6 +149,17 @@ export class PlaySpace {
     this.blue = []
     this.yellow = []
     this.green = []
+  }
+
+  complete(): boolean {
+    let piles = [this.red, this.blue, this.yellow, this.green]
+    for (let pile of piles) {
+      if (pile.length < 5) {
+        return false
+      }
+    }
+
+    return true
   }
 
   receivePlayCard(card: Card): boolean {
@@ -243,8 +256,9 @@ export class Hanabi {
 
   dealInitialHands() {
     let playerIndex = 0;
+    let cardsPerPlayer = this.numPlayers < 5 ? 5 : 4
     const hands: Card[][] = []
-    while(this.deck.length > 50 - this.numPlayers * 5) {
+    while(this.deck.length > 50 - this.numPlayers * cardsPerPlayer) {
       if (!hands[playerIndex]) {
         hands[playerIndex] = []
       }
@@ -269,14 +283,26 @@ export class Hanabi {
     this.players[playerId].receiveHint(hint)
   }
 
-  discardCard(playerId: number, cardId: number) {
+  discardCard(playerId: number, cardId: number): boolean {
     if (this.status === GameStatus.over) {
       throw new Error('Game is ended, cannot make anymore plays')
     }
 
-    this.players[playerId].discardCard(cardId)
-    this.blueTokens += 1
-    this.players[playerId].hand?.push(this.deck.drawCard())
+    if (this.players[playerId].discardCard(cardId)) {
+      this.blueTokens += 1
+      this.players[playerId].hand.push(this.deck.drawCard())
+      return true
+    }
+    
+    return false
+  }
+
+  setGameOver() {
+    this.status = GameStatus.over
+  }
+
+  setGameWin() {
+    this.status = GameStatus.win
   }
 
   playCard(playerId: number, cardId: number) {
@@ -289,6 +315,11 @@ export class Hanabi {
 
     if (!success) {
       this.activateRedToken()
+      return
+    }
+
+    if (this.playSpace.complete()) {
+      this.setGameWin()
     }
   }
 
@@ -296,7 +327,7 @@ export class Hanabi {
     this.redTokens -= 1
 
     if (this.redTokens === 0) {
-      this.status = GameStatus.over
+      this.setGameOver()
     }
   }
 
