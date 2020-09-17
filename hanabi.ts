@@ -27,6 +27,7 @@ export class Card {
     return {
       value: this.value,
       color: this.color,
+      id: this.id,
     }
   }
 }
@@ -38,9 +39,17 @@ interface Hint {
 
 class Deck {
   cards: Card[];
-  constructor() {
-    this.cards = this.buildDeck();
-    this.shuffleDeck(this.cards)
+  constructor(cards?: Card[]) {
+    if (cards) {
+      this.cards = cards
+    } else {
+      this.cards = this.buildDeck();
+      this.shuffleDeck(this.cards)
+    }
+  }
+
+  serialize() {
+    return this.cards.map(card => card.serialize())
   }
 
   get length() {
@@ -97,11 +106,26 @@ class Player {
   id: number;
   hand: Card[];
   hints: Hint[];
+  name: string;
 
-  constructor(id: number){
+  constructor(id: number, name?: string, hand?: Card[], hints?: Hint[]){
     this.id = id
     this.hints = []
     this.hand = []
+
+    if (!name) {
+      this.name = `Player $${this.id}`
+    } else {
+      this.name = name
+    }
+
+    if (hand) {
+      this.hand = hand
+    }
+
+    if (hints) {
+      this.hints = hints
+    }
   }
 
   getInitialHand(cards: Card[]) {
@@ -132,8 +156,9 @@ class Player {
   serialize() {
     return {
       id: this.id,
-      hand: this.hand?.map(card => card.serialize()),
+      hand: this.hand.map(card => card.serialize()),
       hints: this.hints,
+      name: this.name,
     }
   }
 }
@@ -149,6 +174,15 @@ export class PlaySpace {
     this.blue = []
     this.yellow = []
     this.green = []
+  }
+
+  serialize() {
+    return {
+      red: this.red.map(card => card.serialize()),
+      green: this.green.map(card => card.serialize()),
+      blue: this.blue.map(card => card.serialize()),
+      yellow: this.yellow.map(card => card.serialize()),
+    }
   }
 
   complete(): boolean {
@@ -242,13 +276,13 @@ export class Hanabi {
   playSpace: PlaySpace;
   status = GameStatus.playing;
 
-  constructor(numPlayers: number) {
+  constructor(numPlayers: number, playerNames = []) {
     this.deck = new Deck();
     this.playSpace = new PlaySpace();
     this.numPlayers = numPlayers;
     this.players = Array(this.numPlayers)
     for (let i = 0; i < this.numPlayers; i++) {
-      this.players[i] = new Player(i)
+      this.players[i] = new Player(i, playerNames[i])
     }
 
     this.dealInitialHands()
@@ -338,10 +372,21 @@ export class Hanabi {
    * @param playerId id of the player viewing the game.
    */
   serialize(playerId?: number) {
+    let players
     if (playerId === undefined) {
-      return this.players.map(player => player.serialize())
+      players = this.players.map(player => player.serialize())
+    } else {
+      players = this.players.filter(player => player.id !== playerId).map(player => player.serialize())
     }
-    return this.players.filter(player => player.id !== playerId).map(player => player.serialize())
+    return {
+      deck: this.deck.serialize(),
+      numPlayers: this.numPlayers,
+      players,
+      blueTokens: this.blueTokens,
+      redTokens: this.redTokens,
+      playSpace: this.playSpace.serialize(),
+      status: this.status,
+    }
   }
 }
 
