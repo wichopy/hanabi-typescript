@@ -1,4 +1,4 @@
-import {Hanabi, PlaySpace, Card, CardColor } from './hanabi'
+import {Hanabi, PlaySpace, Card, CardColor, GameStatus } from './hanabi'
 describe('Hanabi', () => {
   let numPlayers = 3
   let hanabi = new Hanabi(numPlayers)
@@ -56,13 +56,11 @@ describe('Hanabi', () => {
   
       it.todo('should only include a card color or card number in the hint')
 
-      it.todo('should not do anything if no blu e tokens are left')
+      it.todo('should not do anything if no blue tokens are left')
     })
 
     describe('discarding cards', () => {
       it.todo('should replace a card in player hand and increase blue tokens')
-
-      it.todo('should not be pissible if the deck is empty')
 
       it('should not be possible if no cards are in the hand', () =>  {
         hanabi.players[0].hand = []
@@ -83,7 +81,17 @@ describe('Hanabi', () => {
   })
 
   describe('game ending conditions', () => {
-    it.todo('game ends if all red tokens are activated')
+    it('game ends if all red tokens are activated', () => {
+      hanabi.redTokens=1
+      const receivePlayCardMock = jest.fn(() => false)
+      hanabi.playSpace.receivePlayCard = receivePlayCardMock
+      const gameOverSpy = jest.spyOn(hanabi, 'setGameOver')
+      hanabi.playCard(0, 0)
+      
+      expect(gameOverSpy).toHaveBeenCalledTimes(1)
+      expect(hanabi.redTokens).toEqual(0)
+      expect(hanabi.status).toEqual(GameStatus.over)
+    })
 
     it.todo('game ends if all cards are played')
 
