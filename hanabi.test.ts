@@ -49,22 +49,61 @@ describe('Hanabi', () => {
           message: 'These 2 are red',
         }
         hanabi.giveHint(2, hint)
-        console.log(hanabi.players[0])
         expect(hanabi.players[2].hints).toEqual([hint])
         expect(hanabi.blueTokens).toEqual(7)
       })
   
       it.todo('should only include a card color or card number in the hint')
 
-      it.todo('should not do anything if no blue tokens are left')
+      it('should return an error if no blue tokens are left', () => {
+        hanabi.blueTokens = 0
+        expect(() => hanabi.giveHint(1, {
+          cardIds: [0],
+          message: 'This is red'
+        })).toThrow()
+      })
+
+      it('should switch players if successful', () => {
+        const switchPlayerSpy = jest.spyOn(hanabi, 'nextPlayer')
+
+        const hint = {
+          cardIds:[ 0, 2],
+          message: 'These 2 are red',
+        }
+        hanabi.giveHint(2, hint)
+
+        expect(switchPlayerSpy).toBeCalledTimes(1)
+      })
     })
 
     describe('discarding cards', () => {
-      it.todo('should replace a card in player hand and increase blue tokens')
+      it('should replace a card in player hand and increase blue tokens', () => {
+        hanabi.blueTokens = 4
+        const drawCardSpy = jest.spyOn(hanabi.deck, 'drawCard')
+        const cardId = hanabi.players[0].hand[0].id
+        hanabi.discardCard(0, cardId)
+
+        expect(drawCardSpy).toBeCalledTimes(1)
+        expect(hanabi.blueTokens).toEqual(5)
+      })
 
       it('should not be possible if no cards are in the hand', () =>  {
         hanabi.players[0].hand = []
-        expect(hanabi.discardCard(0, 0)).toEqual(false)
+        expect(() => hanabi.discardCard(0, 0)).toThrow()
+      })
+
+      it('should throw an error is all blue tokens are not used', () => {
+        expect(() => hanabi.discardCard(0, 0)).toThrow()
+      })
+
+      it('should switch players if successful', () => {
+        const switchPlayerSpy = jest.spyOn(hanabi, 'nextPlayer')
+
+        hanabi.blueTokens = 4
+        const cardId = hanabi.players[0].hand[0].id
+        hanabi.discardCard(0, cardId)
+
+        expect(switchPlayerSpy).toBeCalledTimes(1)
       })
     })
 
@@ -76,6 +115,15 @@ describe('Hanabi', () => {
 
         expect(hanabi.redTokens).toEqual(2)
         expect(receivePlayCardMock).toBeCalledTimes(1)
+      })
+
+      it('should switch players if successful', () => {
+          const switchPlayerSpy = jest.spyOn(hanabi, 'nextPlayer')
+          const receivePlayCardMock = jest.fn(() => true)
+          hanabi.playSpace.receivePlayCard = receivePlayCardMock
+          hanabi.playCard(0, 0)
+  
+          expect(switchPlayerSpy).toBeCalledTimes(1)
       })
     })
   })

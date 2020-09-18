@@ -134,7 +134,6 @@ class Player {
 
   receiveHint(hint: Hint) {
     this.hints.push(hint)
-    console.log(this.hints)
   }
 
   discardCard(cardId: number): Card | null {
@@ -275,6 +274,7 @@ export class Hanabi {
   redTokens = 3;
   playSpace: PlaySpace;
   status = GameStatus.playing;
+  currentTurn = 0;
 
   constructor(numPlayers: number, playerNames = []) {
     this.deck = new Deck();
@@ -305,6 +305,10 @@ export class Hanabi {
     }
   }
 
+  nextPlayer() {
+    this.currentTurn = this.currentTurn === this.numPlayers ? 0 : this.currentTurn + 1
+  }
+
   giveHint(playerId: number, hint: Hint) {
     if (this.status === GameStatus.over) {
       throw new Error('Game is ended, cannot make anymore plays')
@@ -313,22 +317,31 @@ export class Hanabi {
     if (this.blueTokens === 0) {
       throw new Error('No blue tokens left, must discard a card to get more.')
     }
+
     this.blueTokens -= 1
     this.players[playerId].receiveHint(hint)
+    this.nextPlayer()
   }
 
-  discardCard(playerId: number, cardId: number): boolean {
+  discardCard(playerId: number, cardId: number) {
     if (this.status === GameStatus.over) {
       throw new Error('Game is ended, cannot make anymore plays')
     }
 
-    if (this.players[playerId].discardCard(cardId)) {
-      this.blueTokens += 1
-      this.players[playerId].hand.push(this.deck.drawCard())
-      return true
+    if (this.blueTokens === 8) {
+      throw new Error('No blue tokens used, cannot get more.')
     }
-    
-    return false
+
+    const discardedCard = this.players[playerId].discardCard(cardId)
+
+    if (!discardedCard) {
+      throw new Error('Card not in hand')
+    }
+
+    this.blueTokens += 1
+    const drawnCard = this.deck.drawCard()
+    this.players[playerId].hand.push(drawnCard)
+    this.nextPlayer()
   }
 
   setGameOver() {
@@ -354,7 +367,10 @@ export class Hanabi {
 
     if (this.playSpace.complete()) {
       this.setGameWin()
+      return
     }
+
+    this.nextPlayer()
   }
 
   activateRedToken() {
