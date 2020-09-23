@@ -220,8 +220,16 @@ export class PlaySpace {
     }
 
     if (card.color === CardColor.red) {
-      if (this.red.length === 0)
-      if (card.value !== 1) {
+      if (this.red.length === 0) {
+        if (card.value !== 1) {
+          return false
+        } else {
+          this.red.push(card)
+          return true
+        }
+      }
+
+      if (card.value !== this.red.length -1) {
         return false
       } else {
         this.red.push(card)

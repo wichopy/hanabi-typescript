@@ -168,7 +168,20 @@ describe('Play Space', () => {
     expect(playSpace.receivePlayCard(new Card(0, 3, CardColor.red))).toEqual(false)
   })
 
-  it.todo('should handle white cards by auto placing them in the appropriate pile')
+  it('should handle white cards by auto placing them in the appropriate pile', () => {
+    playSpace.blue = Array(3).fill(new Card(0, 0, CardColor.white))
+    playSpace.red = Array(2).fill(new Card(0, 0, CardColor.white))
+    playSpace.green = Array(4).fill(new Card(0, 0, CardColor.white))
+    playSpace.yellow = Array(1).fill(new Card(0, 0, CardColor.white))
+
+    const white3Card = new Card(0, 3, CardColor.white)
+    expect(playSpace.receivePlayCard(white3Card)).toEqual(true)
+    expect(playSpace.red[2]).toEqual(white3Card)
+
+    const white2Card = new Card(0, 2, CardColor.white)
+    expect(playSpace.receivePlayCard(white2Card)).toEqual(true)
+    expect(playSpace.yellow[1]).toEqual(white2Card)
+  })
 
   it.todo('should allow a user to specify which coloumn they want to place a white card if there is more than 1 possibility.')
 
