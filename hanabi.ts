@@ -162,11 +162,17 @@ class Player {
   }
 }
 
+export enum CardPlayStatus {
+  failed = 'failed',
+  success = 'success',
+  pileComplete = 'pileComplete'
+}
+
 export class PlaySpace {
-  red: Card[];
-  blue: Card[];
-  yellow: Card[];
-  green: Card[];
+  [CardColor.red]: Card[];
+  [CardColor.blue]: Card[];
+  [CardColor.yellow]: Card[];
+  [CardColor.green]: Card[];
 
   constructor() {
     this.red = []
@@ -195,82 +201,60 @@ export class PlaySpace {
     return true
   }
 
-  receivePlayCard(card: Card): boolean {
+  addCardToPile(card: Card): CardPlayStatus {
+    if (card.color === CardColor.white) {
+      throw new Error('Only non white cards can use this method')
+    }
+
+    if (this[card.color].length === 0) {
+      if (card.value !== 1) {
+        return CardPlayStatus.failed
+      } else {
+        this[card.color].push(card)
+        return CardPlayStatus.success
+      }
+    }
+
+    if (card.value !== this[card.color].length -1) {
+      return CardPlayStatus.failed
+    } else {
+      this[card.color].push(card)
+      if (this[card.color].length === 5) {
+        return CardPlayStatus.pileComplete
+      } else {
+        return CardPlayStatus.success
+      }
+    }
+  }
+
+  receivePlayCard(card: Card): CardPlayStatus {
     if (card.color === CardColor.white) {
       let piles = [this.red, this.blue, this.yellow, this.green]
       if (card.value === 1) {
         for (let pile of piles) {
           if (pile.length === 0) {
             pile.push(card)
-            return true
+            return CardPlayStatus.success
           }
         }
 
-        return false
+        return CardPlayStatus.failed
       }
 
       for (let pile of piles) {
         if (pile.length === card.value - 1) {
           pile.push(card)
-          return true
+          if (pile.length === 5) {
+            return CardPlayStatus.pileComplete
+          }
+          return CardPlayStatus.success
         }
       }
 
-      return false
+      return CardPlayStatus.failed
     }
 
-    if (card.color === CardColor.red) {
-      if (this.red.length === 0) {
-        if (card.value !== 1) {
-          return false
-        } else {
-          this.red.push(card)
-          return true
-        }
-      }
-
-      if (card.value !== this.red.length -1) {
-        return false
-      } else {
-        this.red.push(card)
-        return true
-      }
-    }
-
-
-    if (card.color === CardColor.green) {
-      if (this.green.length === 0)
-      if (card.value !== 1) {
-        return false
-      } else {
-        this.green.push(card)
-        return true
-      }
-    }
-
-
-    if (card.color === CardColor.blue) {
-      if (this.blue.length === 0)
-      if (card.value !== 1) {
-        return false
-      } else {
-        this.blue.push(card)
-        return true
-      }
-    }
-
-
-    if (card.color === CardColor.yellow) {
-      if (this.yellow.length === 0)
-      if (card.value !== 1) {
-        return false
-      } else {
-        this.yellow.push(card)
-        return true
-      }
-    }
-
-    return false
+    return this.addCardToPile(card)
   }
 }
 
@@ -366,11 +350,15 @@ export class Hanabi {
     }
 
     const card = this.players[playerId].playCard(cardId)
-    const success = this.playSpace.receivePlayCard(card)
+    const playStatus = this.playSpace.receivePlayCard(card)
 
-    if (!success) {
+    if (playStatus === CardPlayStatus.failed) {
       this.activateRedToken()
       return
+    }
+
+    if (playStatus === CardPlayStatus.pileComplete && this.blueTokens < 8) {
+      this.blueTokens += 1
     }
 
     if (this.playSpace.complete()) {

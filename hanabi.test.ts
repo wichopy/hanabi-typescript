@@ -1,4 +1,4 @@
-import {Hanabi, PlaySpace, Card, CardColor, GameStatus } from './hanabi'
+import {Hanabi, PlaySpace, Card, CardColor, GameStatus, CardPlayStatus } from './hanabi'
 describe('Hanabi', () => {
   let numPlayers = 3
   let hanabi = new Hanabi(numPlayers)
@@ -109,7 +109,7 @@ describe('Hanabi', () => {
 
     describe('playing cards', () => {
       it('if invalid, activate a red token.', () => {
-        const receivePlayCardMock = jest.fn(() => false)
+        const receivePlayCardMock = jest.fn(() => CardPlayStatus.failed)
         hanabi.playSpace.receivePlayCard = receivePlayCardMock
         hanabi.playCard(0, 0)
 
@@ -119,11 +119,29 @@ describe('Hanabi', () => {
 
       it('should switch players if successful', () => {
           const switchPlayerSpy = jest.spyOn(hanabi, 'nextPlayer')
-          const receivePlayCardMock = jest.fn(() => true)
+          const receivePlayCardMock = jest.fn(() => CardPlayStatus.success)
           hanabi.playSpace.receivePlayCard = receivePlayCardMock
           hanabi.playCard(0, 0)
   
           expect(switchPlayerSpy).toBeCalledTimes(1)
+      })
+
+      it('receive an additional blue token if pile complete', () => {
+        const receivePlayCardMock = jest.fn(() => CardPlayStatus.pileComplete)
+        hanabi.blueTokens = 5
+        hanabi.playSpace.receivePlayCard = receivePlayCardMock
+        hanabi.playCard(0, 0)
+
+        expect(hanabi.blueTokens).toEqual(6)
+      })
+
+      it('no additional blue token if pile complete but all blue tokens unused', () => {
+        const receivePlayCardMock = jest.fn(() => CardPlayStatus.pileComplete)
+        hanabi.blueTokens = 8
+        hanabi.playSpace.receivePlayCard = receivePlayCardMock
+        hanabi.playCard(0, 0)
+
+        expect(hanabi.blueTokens).toEqual(8)
       })
     })
   })
@@ -131,7 +149,7 @@ describe('Hanabi', () => {
   describe('game ending conditions', () => {
     it('game ends if all red tokens are activated', () => {
       hanabi.redTokens=1
-      const receivePlayCardMock = jest.fn(() => false)
+      const receivePlayCardMock = jest.fn(() => CardPlayStatus.failed)
       hanabi.playSpace.receivePlayCard = receivePlayCardMock
       const gameOverSpy = jest.spyOn(hanabi, 'setGameOver')
       hanabi.playCard(0, 0)
@@ -156,16 +174,16 @@ describe('Play Space', () => {
   })
 
   it('should return true on valid plays', () => {
-    expect(playSpace.receivePlayCard(new Card(0, 1, CardColor.red))).toEqual(true)
+    expect(playSpace.receivePlayCard(new Card(0, 1, CardColor.red))).toEqual(CardPlayStatus.success)
   })
 
   it('should include card in piles on valid plays', () => {
-    expect(playSpace.receivePlayCard(new Card(0, 1, CardColor.red))).toEqual(true)
+    expect(playSpace.receivePlayCard(new Card(0, 1, CardColor.red))).toEqual(CardPlayStatus.success)
     expect(playSpace.red.length).toEqual(1)
   })
 
   it('should return false on invalid plays', () => {
-    expect(playSpace.receivePlayCard(new Card(0, 3, CardColor.red))).toEqual(false)
+    expect(playSpace.receivePlayCard(new Card(0, 3, CardColor.red))).toEqual(CardPlayStatus.failed)
   })
 
   it('should handle white cards by auto placing them in the appropriate pile', () => {
@@ -175,11 +193,11 @@ describe('Play Space', () => {
     playSpace.yellow = Array(1).fill(new Card(0, 0, CardColor.white))
 
     const white3Card = new Card(0, 3, CardColor.white)
-    expect(playSpace.receivePlayCard(white3Card)).toEqual(true)
+    expect(playSpace.receivePlayCard(white3Card)).toEqual(CardPlayStatus.success)
     expect(playSpace.red[2]).toEqual(white3Card)
 
     const white2Card = new Card(0, 2, CardColor.white)
-    expect(playSpace.receivePlayCard(white2Card)).toEqual(true)
+    expect(playSpace.receivePlayCard(white2Card)).toEqual(CardPlayStatus.success)
     expect(playSpace.yellow[1]).toEqual(white2Card)
   })
 
