@@ -161,7 +161,21 @@ describe('Hanabi', () => {
 
     it.todo('game ends if all cards are played')
 
-    it.todo('game ends if all color piles are fully populated')
+    it('game ends if all color piles are fully populated', () => {
+      hanabi.playSpace.blue=Array(5).fill(new Card(0,0, CardColor.white))
+      hanabi.playSpace.red=Array(5).fill(new Card(0,0, CardColor.white))
+      hanabi.playSpace.yellow=Array(5).fill(new Card(0,0, CardColor.white))
+      hanabi.playSpace.green=Array(4).fill(new Card(0,0, CardColor.white))
+
+      const receivePlayCardMock = jest.fn(() => {
+        hanabi.playSpace.green.push(new Card(0,0, CardColor.white))
+        return CardPlayStatus.pileComplete
+      })
+      hanabi.playSpace.receivePlayCard = receivePlayCardMock
+      hanabi.playCard(0, 0)
+
+      expect(hanabi.status).toEqual(GameStatus.win)
+    })
   })
 
 })
