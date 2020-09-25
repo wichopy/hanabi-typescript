@@ -143,6 +143,8 @@ describe('Hanabi', () => {
 
         expect(hanabi.blueTokens).toEqual(8)
       })
+
+      it.todo('After playing a card, drawa new card if cards are available in the deck')
     })
   })
 
@@ -159,7 +161,8 @@ describe('Hanabi', () => {
       expect(hanabi.status).toEqual(GameStatus.over)
     })
 
-    it.todo('game ends if all cards are played')
+    it.todo('game ends if all cards are drawn')
+    it.todo('On the last turn, every play must play a card or give a hint.')
 
     it('game ends if all color piles are fully populated', () => {
       hanabi.playSpace.blue=Array(5).fill(new Card(0,0, CardColor.white))

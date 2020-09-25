@@ -10,6 +10,7 @@ export enum GameStatus {
   playing = 'playing',
   over = 'over',
   win = 'win',
+  lastTurn = 'lastTurn',
 }
 
 export class Card {
@@ -94,11 +95,11 @@ class Deck {
 
   drawCard(): Card {
     const card = this.cards.pop()
-    if (card !== undefined) {
+    if (card!== undefined) {
       return card
     }
 
-    throw new Error('Deck empty')
+    throw new Error('No cards to draw')
   }
 }
 
@@ -150,6 +151,10 @@ class Player {
     const index = this.hand.findIndex(card => card.id === cardId)
     const cards = this.hand.splice(index, 1)
     return cards[0]
+  }
+
+  receiveNewCard(card: Card) {
+    this.hand.push(card)
   }
 
   serialize() {
@@ -324,6 +329,10 @@ export class Hanabi {
       throw new Error('No blue tokens used, cannot get more.')
     }
 
+    if (this.status === GameStatus.lastTurn) {
+      throw new Error('No cards to draw, cannot discard')
+    }
+  
     const discardedCard = this.players[playerId].discardCard(cardId)
 
     if (!discardedCard) {
@@ -332,6 +341,9 @@ export class Hanabi {
 
     this.blueTokens += 1
     const drawnCard = this.deck.drawCard()
+    if (this.deck.length === 0) {
+      this.status = GameStatus.lastTurn
+    }
     this.players[playerId].hand.push(drawnCard)
     this.nextPlayer()
   }
@@ -352,9 +364,16 @@ export class Hanabi {
     const card = this.players[playerId].playCard(cardId)
     const playStatus = this.playSpace.receivePlayCard(card)
 
+    if (this.deck.length > 0) {
+      const drawnCard = this.deck.drawCard()
+      this.players[playerId].receiveNewCard(drawnCard)
+      if (this.deck.length === 0) {
+        this.status = GameStatus.lastTurn
+      }
+    }
+
     if (playStatus === CardPlayStatus.failed) {
       this.activateRedToken()
-      return
     }
 
     if (playStatus === CardPlayStatus.pileComplete && this.blueTokens < 8) {
