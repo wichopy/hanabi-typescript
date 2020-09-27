@@ -48,8 +48,8 @@ describe('Hanabi', () => {
           cardIds:[ 0, 2],
           message: 'These 2 are red',
         }
-        hanabi.giveHint(2, hint)
-        expect(hanabi.players[2].hints).toEqual([hint])
+        hanabi.giveHint(0, hint)
+        expect(hanabi.players[0].hints).toEqual([hint])
         expect(hanabi.blueTokens).toEqual(7)
       })
   
@@ -70,9 +70,17 @@ describe('Hanabi', () => {
           cardIds:[ 0, 2],
           message: 'These 2 are red',
         }
-        hanabi.giveHint(2, hint)
+        hanabi.giveHint(0, hint)
 
         expect(switchPlayerSpy).toBeCalledTimes(1)
+      })
+
+      it('should throw an error if not the players turn', () => {
+        const hint = {
+          cardIds:[ 0, 2],
+          message: 'These 2 are red',
+        }
+        expect(() => hanabi.giveHint(2, hint)).toThrowError()
       })
     })
 
@@ -104,6 +112,14 @@ describe('Hanabi', () => {
         hanabi.discardCard(0, cardId)
 
         expect(switchPlayerSpy).toBeCalledTimes(1)
+      })
+
+      it('should throw an error if not the players turn', () => {
+        expect(() => hanabi.discardCard(2, 9)).toThrowError()
+      })
+
+      it('should throw an error if play doesn\'t have card id', () => {
+        expect(() => hanabi.discardCard(2, 9)).toThrowError()
       })
     })
 
@@ -142,6 +158,10 @@ describe('Hanabi', () => {
         hanabi.playCard(0, 0)
 
         expect(hanabi.blueTokens).toEqual(8)
+      })
+
+      it('should return an error if its not the players turn', () => {
+        expect(() => hanabi.playCard(2, 0)).toThrowError()
       })
 
       it.todo('After playing a card, drawa new card if cards are available in the deck')

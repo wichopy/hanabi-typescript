@@ -1,3 +1,5 @@
+import { Console } from "console";
+
 export enum CardColor {
   red = 'red',
   yellow = 'yellow',
@@ -285,7 +287,7 @@ export class Hanabi {
     this.dealInitialHands()
   }
 
-  dealInitialHands() {
+  private dealInitialHands() {
     let playerIndex = 0;
     let cardsPerPlayer = this.numPlayers < 5 ? 5 : 4
     const hands: Card[][] = []
@@ -310,6 +312,10 @@ export class Hanabi {
     if (this.status === GameStatus.over) {
       throw new Error('Game is ended, cannot make anymore plays')
     }
+
+    if (this.currentTurn !== playerId) {
+      throw new Error(`Invalid player, it is not player ${playerId}'s turn`)
+    }
     
     if (this.blueTokens === 0) {
       throw new Error('No blue tokens left, must discard a card to get more.')
@@ -323,6 +329,10 @@ export class Hanabi {
   discardCard(playerId: number, cardId: number) {
     if (this.status === GameStatus.over) {
       throw new Error('Game is ended, cannot make anymore plays')
+    }
+
+    if (this.currentTurn !== playerId) {
+      throw new Error(`Invalid player, it is not player ${playerId}'s turn`)
     }
 
     if (this.blueTokens === 8) {
@@ -348,17 +358,21 @@ export class Hanabi {
     this.nextPlayer()
   }
 
-  setGameOver() {
+  private setGameOver() {
     this.status = GameStatus.over
   }
 
-  setGameWin() {
+  private setGameWin() {
     this.status = GameStatus.win
   }
 
   playCard(playerId: number, cardId: number) {
     if (this.status === GameStatus.over) {
       throw new Error('Game is ended, cannot make anymore plays')
+    }
+
+    if (playerId !== this.currentTurn) {
+      throw new Error(`Invalid player, it is not player ${playerId}'s turn`)
     }
 
     const card = this.players[playerId].playCard(cardId)
@@ -388,7 +402,7 @@ export class Hanabi {
     this.nextPlayer()
   }
 
-  activateRedToken() {
+  private activateRedToken() {
     this.redTokens -= 1
 
     if (this.redTokens === 0) {
