@@ -1,4 +1,8 @@
-import { Console } from "console";
+export enum CardPlayStatus {
+  failed = 'failed',
+  success = 'success',
+  pileComplete = 'pileComplete'
+}
 
 export enum CardColor {
   red = 'red',
@@ -15,27 +19,13 @@ export enum GameStatus {
   lastTurn = 'lastTurn',
 }
 
-export class Card {
+export interface Card {
   id: number;
   value: number;
   color: CardColor;
-
-  constructor(id: number, value: number, color: CardColor) {
-    this.id = id;
-    this.value = value;
-    this.color = color;
-  }
-
-  serialize() {
-    return {
-      value: this.value,
-      color: this.color,
-      id: this.id,
-    }
-  }
 }
 
-interface Hint {
+export interface Hint {
   cardIds: number[];
   message: string;
 }
@@ -52,7 +42,7 @@ class Deck {
   }
 
   serialize() {
-    return this.cards.map(card => card.serialize())
+    return this.cards
   }
 
   get length() {
@@ -60,23 +50,27 @@ class Deck {
   }
 
   shuffleDeck(deck: Card[]) {
-    let count = deck.length;
-    while(count) {
-      deck.push(deck.splice(Math.floor(Math.random() * count), 1)[0]);
-      count -= 1;
-    }
     // https://medium.com/swlh/the-javascript-shuffle-62660df19a5d
-    // const cutDeckVariant = deck.length / 2 + Math.floor(Math.random() * 9) - 4;
-    // const leftHalf = deck.splice(0, cutDeckVariant);
-    // let leftCount = leftHalf.length;
-    // let rightCount = deck.length - Math.floor(Math.random() * 4);
-    // while(leftCount > 0) {
-    //   const takeAmount = Math.floor(Math.random() * 4);
-    //   deck.splice(rightCount, 0, ...leftHalf.splice(leftCount, takeAmount));
-    //   leftCount -= takeAmount;
-    //   rightCount = rightCount - Math.floor(Math.random() * 4) + takeAmount;
+    
+    // Simple shuffle
+    // let count = deck.length;
+    // while(count) {
+    //   deck.push(deck.splice(Math.floor(Math.random() * count), 1)[0]);
+    //   count -= 1;
     // }
-    // deck.splice(rightCount, 0, ...leftHalf);
+
+    // Simulate actual deck chuffle
+    const cutDeckVariant = deck.length / 2 + Math.floor(Math.random() * 9) - 4;
+    const leftHalf = deck.splice(0, cutDeckVariant);
+    let leftCount = leftHalf.length;
+    let rightCount = deck.length - Math.floor(Math.random() * 4);
+    while(leftCount > 0) {
+      const takeAmount = Math.floor(Math.random() * 4);
+      deck.splice(rightCount, 0, ...leftHalf.splice(leftCount, takeAmount));
+      leftCount -= takeAmount;
+      rightCount = rightCount - Math.floor(Math.random() * 4) + takeAmount;
+    }
+    deck.splice(rightCount, 0, ...leftHalf);
   }
 
   buildDeck() {
@@ -87,7 +81,7 @@ class Deck {
     let i = 0
     for (let color of cardColors) {
       for (let value of cardValues) {
-        cards[i] = new Card(i, value, color);
+        cards[i] = { id: i, value, color };
         i += 1
       }
     }
@@ -162,17 +156,11 @@ class Player {
   serialize() {
     return {
       id: this.id,
-      hand: this.hand.map(card => card.serialize()),
+      hand: this.hand,
       hints: this.hints,
       name: this.name,
     }
   }
-}
-
-export enum CardPlayStatus {
-  failed = 'failed',
-  success = 'success',
-  pileComplete = 'pileComplete'
 }
 
 export class PlaySpace {
@@ -190,10 +178,10 @@ export class PlaySpace {
 
   serialize() {
     return {
-      red: this.red.map(card => card.serialize()),
-      green: this.green.map(card => card.serialize()),
-      blue: this.blue.map(card => card.serialize()),
-      yellow: this.yellow.map(card => card.serialize()),
+      red: this.red,
+      green: this.green,
+      blue: this.blue,
+      yellow: this.yellow,
     }
   }
 
@@ -287,7 +275,7 @@ export class Hanabi {
     this.dealInitialHands()
   }
 
-  private dealInitialHands() {
+  dealInitialHands() {
     let playerIndex = 0;
     let cardsPerPlayer = this.numPlayers < 5 ? 5 : 4
     const hands: Card[][] = []
@@ -358,11 +346,11 @@ export class Hanabi {
     this.nextPlayer()
   }
 
-  private setGameOver() {
+  setGameOver() {
     this.status = GameStatus.over
   }
 
-  private setGameWin() {
+  setGameWin() {
     this.status = GameStatus.win
   }
 
@@ -402,7 +390,7 @@ export class Hanabi {
     this.nextPlayer()
   }
 
-  private activateRedToken() {
+  activateRedToken() {
     this.redTokens -= 1
 
     if (this.redTokens === 0) {
@@ -434,9 +422,3 @@ export class Hanabi {
     }
   }
 }
-
-// const hanabi = new Hanabi(4)
-// console.log(hanabi.deck.cards[0])
-// console.log(hanabi.deck.cards[45])
-// console.log(hanabi.deck.cards[20])
-// console.log(hanabi.players[0] && hanabi.players[1].hand)

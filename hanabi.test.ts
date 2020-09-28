@@ -1,4 +1,4 @@
-import {Hanabi, PlaySpace, Card, CardColor, GameStatus, CardPlayStatus } from './hanabi'
+import {Hanabi, PlaySpace, CardColor, GameStatus, CardPlayStatus } from './hanabi'
 describe('Hanabi', () => {
   let numPlayers = 3
   let hanabi = new Hanabi(numPlayers)
@@ -185,13 +185,13 @@ describe('Hanabi', () => {
     it.todo('On the last turn, every play must play a card or give a hint.')
 
     it('game ends if all color piles are fully populated', () => {
-      hanabi.playSpace.blue=Array(5).fill(new Card(0,0, CardColor.white))
-      hanabi.playSpace.red=Array(5).fill(new Card(0,0, CardColor.white))
-      hanabi.playSpace.yellow=Array(5).fill(new Card(0,0, CardColor.white))
-      hanabi.playSpace.green=Array(4).fill(new Card(0,0, CardColor.white))
+      hanabi.playSpace.blue=Array(5).fill({ id: 0, value: 0, color: CardColor.white})
+      hanabi.playSpace.red=Array(5).fill({ id: 0, value: 0, color: CardColor.white})
+      hanabi.playSpace.yellow=Array(5).fill({ id: 0, value: 0, color: CardColor.white})
+      hanabi.playSpace.green=Array(4).fill({ id: 0, value: 0, color: CardColor.white})
 
       const receivePlayCardMock = jest.fn(() => {
-        hanabi.playSpace.green.push(new Card(0,0, CardColor.white))
+        hanabi.playSpace.green.push({ id: 0, value: 0, color: CardColor.white})
         return CardPlayStatus.pileComplete
       })
       hanabi.playSpace.receivePlayCard = receivePlayCardMock
@@ -211,29 +211,29 @@ describe('Play Space', () => {
   })
 
   it('should return true on valid plays', () => {
-    expect(playSpace.receivePlayCard(new Card(0, 1, CardColor.red))).toEqual(CardPlayStatus.success)
+    expect(playSpace.receivePlayCard({ id: 0, value: 1, color: CardColor.red })).toEqual(CardPlayStatus.success)
   })
 
   it('should include card in piles on valid plays', () => {
-    expect(playSpace.receivePlayCard(new Card(0, 1, CardColor.red))).toEqual(CardPlayStatus.success)
+    expect(playSpace.receivePlayCard({ id: 0, value: 1, color: CardColor.red })).toEqual(CardPlayStatus.success)
     expect(playSpace.red.length).toEqual(1)
   })
 
   it('should return false on invalid plays', () => {
-    expect(playSpace.receivePlayCard(new Card(0, 3, CardColor.red))).toEqual(CardPlayStatus.failed)
+    expect(playSpace.receivePlayCard({ id: 0, value: 3, color: CardColor.red })).toEqual(CardPlayStatus.failed)
   })
 
   it('should handle white cards by auto placing them in the appropriate pile', () => {
-    playSpace.blue = Array(3).fill(new Card(0, 0, CardColor.white))
-    playSpace.red = Array(2).fill(new Card(0, 0, CardColor.white))
-    playSpace.green = Array(4).fill(new Card(0, 0, CardColor.white))
-    playSpace.yellow = Array(1).fill(new Card(0, 0, CardColor.white))
+    playSpace.blue = Array(3).fill({ id: 0, value: 0, color: CardColor.white})
+    playSpace.red = Array(2).fill({ id: 0, value: 0, color: CardColor.white})
+    playSpace.green = Array(4).fill({ id: 0, value: 0, color: CardColor.white})
+    playSpace.yellow = Array(1).fill({ id: 0, value: 0, color: CardColor.white})
 
-    const white3Card = new Card(0, 3, CardColor.white)
+    const white3Card = { id: 0, value: 3, color: CardColor.white }
     expect(playSpace.receivePlayCard(white3Card)).toEqual(CardPlayStatus.success)
     expect(playSpace.red[2]).toEqual(white3Card)
 
-    const white2Card = new Card(0, 2, CardColor.white)
+    const white2Card = { id: 0, value: 2, color: CardColor.white }
     expect(playSpace.receivePlayCard(white2Card)).toEqual(CardPlayStatus.success)
     expect(playSpace.yellow[1]).toEqual(white2Card)
   })
