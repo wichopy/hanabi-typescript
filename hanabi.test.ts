@@ -164,7 +164,20 @@ describe('Hanabi', () => {
         expect(() => hanabi.playCard(2, 0)).toThrowError()
       })
 
-      it.todo('After playing a card, drawa new card if cards are available in the deck')
+      it('After playing a card, draw a new card if cards are available in the deck', () => {
+        const drawCardSpy = jest.spyOn(hanabi.deck, 'drawCard')
+        hanabi.playCard(0, hanabi.players[0].hand[0].id)
+
+        expect(drawCardSpy).toBeCalledTimes(1)
+      })
+
+      it('After playing a card, if deck is empty no cards are drawn', () => {
+        const drawCardSpy = jest.spyOn(hanabi.deck, 'drawCard')
+        hanabi.deck.cards = []
+        hanabi.playCard(0, hanabi.players[0].hand[0].id)
+
+        expect(drawCardSpy).toBeCalledTimes(0)
+      })
     })
   })
 
@@ -181,8 +194,9 @@ describe('Hanabi', () => {
       expect(hanabi.status).toEqual(GameStatus.over)
     })
 
-    it.todo('game ends if all cards are drawn')
-    it.todo('On the last turn, every play must play a card or give a hint.')
+    it.todo('If all cards are drawn, put game into last turn.')
+  
+    it.todo('On the last turn, every player must play a card or give a hint.')
 
     it('game ends if all color piles are fully populated', () => {
       hanabi.playSpace.blue=Array(5).fill({ id: 0, value: 0, color: CardColor.white})
