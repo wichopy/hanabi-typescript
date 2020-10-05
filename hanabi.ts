@@ -412,13 +412,13 @@ export class Hanabi {
       players = this.players.filter(player => player.id !== playerId).map(player => player.serialize())
     }
     return {
-      deck: this.deck.serialize(),
       numPlayers: this.numPlayers,
       players,
       blueTokens: this.blueTokens,
       redTokens: this.redTokens,
       playSpace: this.playSpace.serialize(),
       status: this.status,
+      currentTurn: this.currentTurn,
     }
   }
 }
