@@ -15,7 +15,6 @@ app.get('/', function (req, res) {
 
 app.post('/create', function (req, res) {
   const gameId = v4()
-
   const { numPlayers } = req.body
   if (!numPlayers) {
     res.status(400).send('Need number of players')
@@ -25,6 +24,18 @@ app.post('/create', function (req, res) {
 
   sessions[gameId] = game
   res.json(gameId)
+})
+
+app.get('/session/:id', function(req, res) {
+  const id = req.params.id
+  const session = sessions[id]
+
+  res.json(session.serialize())
+})
+
+app.put('/session/:id/join', function(req, res) {
+  // Set player id cookie for client, sequential to join order.
+  // If max players reacheda, return error.
 })
 
 app.listen(3000, function () {
