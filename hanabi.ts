@@ -264,6 +264,10 @@ export class Hanabi {
   currentTurn = 0;
 
   constructor(numPlayers: number, playerNames = []) {
+    if (numPlayers > 5 || numPlayers < 2) {
+      throw new Error('2 -5 players')
+    }
+
     this.deck = new Deck();
     this.playSpace = new PlaySpace();
     this.numPlayers = numPlayers;
@@ -277,7 +281,7 @@ export class Hanabi {
 
   dealInitialHands() {
     let playerIndex = 0;
-    let cardsPerPlayer = this.numPlayers < 5 ? 5 : 4
+    let cardsPerPlayer = this.numPlayers < 4 ? 5 : 4
     const hands: Card[][] = []
     while(this.deck.length > 50 - this.numPlayers * cardsPerPlayer) {
       if (!hands[playerIndex]) {

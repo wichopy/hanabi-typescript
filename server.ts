@@ -2,16 +2,30 @@
 import express = require('express');
 import {Hanabi} from './hanabi';
 import {v4} from 'uuid'
-const hanabi = new Hanabi(4)
+
+interface PlayerSlot {
+  filled: boolean;
+  displayName: string;
+}
+
+function PlayerSlots(num: number): Record<number, PlayerSlot> {
+  const slots: Record<number, PlayerSlot> = {}
+  for (let i = 0; i < num; i++) {
+    slots[i] = {
+      filled: false,
+      displayName: '',
+    }
+  }
+
+  return slots
+}
 
 const sessions: Record<string, Hanabi> = {}
+const players: Record<string, Record<number, PlayerSlot>> = {}
+
 // Create a new express application instance
 const app: express.Application = express();
 app.use(express.json())
-
-app.get('/', function (req, res) {
-  res.json(hanabi.serialize());
-});
 
 app.post('/create', function (req, res) {
   const gameId = v4()
@@ -23,14 +37,26 @@ app.post('/create', function (req, res) {
   const game = new Hanabi(numPlayers)
 
   sessions[gameId] = game
-  res.json(gameId)
+  const playerSlots = PlayerSlots(numPlayers)
+  playerSlots[0] = {
+    filled: true,
+    displayName: 'Player 0'
+  }
+
+  players[gameId] = playerSlots
+  res.cookie('playerId', 0).status(201).json(gameId)
 })
 
 app.get('/session/:id', function(req, res) {
   const id = req.params.id
   const session = sessions[id]
+  const playerId = req.cookies
+  if (!session) {
+    res.status(400).send('Invalid game ID')
+    return
+  }
 
-  res.json(session.serialize())
+  res.json(session.serialize(playerId))
 })
 
 app.put('/session/:id/join', function(req, res) {
@@ -41,3 +67,5 @@ app.put('/session/:id/join', function(req, res) {
 app.listen(3000, function () {
   console.log('Example app listening on port 3000!');
 });
+
+export default app
